@@ -79,22 +79,24 @@ class _MyHomePageState extends State<MyHomePage> {
   void onClickedNotification(String? payload) {
     /* DO SOMETHING WHEN YOU CLICK ON THE NOTIFICATION */
   }
-  Future<void> _initSocketIo() async {
+  Future<void> _initSocketIo() async { /* INITIALIZE HOST AND PORT */
+    /* MAKE SURE THE HOST AND PORT ARE CORRECT. RECOMMENDED PUT THE HOST AND PORT VARIABLE TO ENVIRONMENT SO THAT YOU CAN EASILY CHANGE IT IN THE FUTURE */
     socket = io('https://socketio.granite.leentechdev.com:3030', OptionBuilder()
       .setTransports(['websocket'])
       .disableAutoConnect()
       .build());
   }
-  void _connectIO() async {
-    socket.connect().onConnectError((data) => print(data));
-    print(socket.connected);
-    try { 
-      socket.onConnect((data) {
+  void _connectIO() async { /* ESTABLISH CONNECTION WITH SOCKET.IO */
+    socket.connect().onConnectError((e) { /* WHEN CONNECTION FAILED */
+      print("onConnectError $e");
+    });
+    try {
+      socket.onConnect((data) { /* WHEN THE CONNECTED SUCCESSFULLY */
         print('Connected');
         setState(() {
           isConnected = true;
         });
-        socket.on('message', (data) {
+        socket.on('message', (data) { /* AFTER CONNECTING, CONSTANTLY LISTEN TO INCOMING MESSAGE */
           var payload = data['message'];
           var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
           var message = payload['message'];
@@ -110,20 +112,43 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     
   }
-  void _disconnectIO() async {
+  void _disconnectIO() async { /* DISCONNECT FROM SOCKET.IO */
     socket.disconnect();
     setState(() {
       isConnected = false;
     });
   }
-  void _joinRoom() async {
-    socket.emit('join', 'message-1');
+  void _joinRoom() async { /* JOIN TO MESSAGE-CHANNEL-<PROJECT_ID> CHANNEL */
+    /* 
+    
+    NOTE:
+
+    ONLY PEOPLE INSIDE THE ROOM CAN RECEIVE A PUSH NOTIFICATION
+
+    EXAMPLE:
+    BACKOFFICE ADMIN, AGENT AND CONTRACTOR HAS A NEW PROJECT WITH ID OF 1
+    ALL OF THEM ARE REQUIRED TO JOIN THE CHANNEL MESSAGE-CHANNEL-1
+
+    IF A NEW PROJECT HAS AN ID OF 2
+    JOIN ALSO TO MESSAGE-CHANNEL-2
+
+    ETC.
+
+     */
+    socket.emit('join', 'message-channel-1');
     setState(() {
       roomJoined = true;
     });
   }
-  void _unjoinRoom() async {
-    socket.emit('leave', 'message-1');
+  void _leaveRoom() async { /* LEAVE FROM MESSAGE-CHANNEL-<PROJECT_ID> CHANNEL */
+    /* 
+    
+    NOTE:
+
+    ONCE A PERSON LEAVES THIS ROOM, HE/SHE CAN NO LONGER RECEIVE ANY PUSH NOTIFICATIONS
+
+     */
+    socket.emit('leave', 'message-channel-1');
     setState(() {
       roomJoined = false;
     });
@@ -139,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             FlatButton(onPressed: !isConnected ? _connectIO : _disconnectIO , child: !isConnected ? const Text('Connect to Socket.IO') : const Text('Disonnect to Socket.IO')),
-            FlatButton(onPressed: !roomJoined ? _joinRoom : _unjoinRoom , child: !roomJoined ? const Text('Join Messages') : const Text('Leave Messages')),
+            isConnected ? FlatButton(onPressed: !roomJoined ? _joinRoom : _leaveRoom , child: !roomJoined ? const Text('Join Messages') : const Text('Leave Messages')) : SizedBox.shrink(),
           ],
         ),
       )
