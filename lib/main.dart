@@ -65,6 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late Socket socket;
   bool isConnected = false;
   bool roomJoined = false;
+  int userId = 1;
 
   @override
   void initState() {
@@ -96,13 +97,16 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           isConnected = true;
         });
-        socket.on('message', (data) { /* AFTER CONNECTING, CONSTANTLY LISTEN TO INCOMING MESSAGE */
-          var payload = data['message'];
-          var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
-          var message = payload['message'];
-          print(payload);
+      });
+      socket.on('message', (data) { /* AFTER CONNECTING, CONSTANTLY LISTEN TO INCOMING MESSAGE */
+        var payload = data['message'];
+        var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
+        var message = payload['message'];
+        int id = payload['receiver_id'];
+        print(payload);
+        if (id == userId) {
           NotificationApi.showNotification(title: sender, body: message, payload: payload.toString());
-        });
+        }
       });
     } catch(error) {
       setState(() {
@@ -135,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ETC.
 
      */
-    socket.emit('join', 'message-channel-1');
+    socket.emit('join', 'message');
     setState(() {
       roomJoined = true;
     });
@@ -148,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ONCE A PERSON LEAVES THIS ROOM, HE/SHE CAN NO LONGER RECEIVE ANY PUSH NOTIFICATIONS
 
      */
-    socket.emit('leave', 'message-channel-1');
+    socket.emit('leave', 'message');
     setState(() {
       roomJoined = false;
     });
