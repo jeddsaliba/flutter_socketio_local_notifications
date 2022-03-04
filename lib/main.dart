@@ -82,80 +82,116 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   Future<void> _initSocketIo() async { /* INITIALIZE HOST AND PORT */
     /* MAKE SURE THE HOST AND PORT ARE CORRECT. RECOMMENDED PUT THE HOST AND PORT VARIABLE TO ENVIRONMENT SO THAT YOU CAN EASILY CHANGE IT IN THE FUTURE */
-    socket = io('https://socketio.granite.leentechdev.com:3030', OptionBuilder()
+    socket = io('https://socket.staging.granite.leentechdev.com:3030', OptionBuilder()
       .setTransports(['websocket'])
-      .disableAutoConnect()
       .build());
-  }
-  void _connectIO() async { /* ESTABLISH CONNECTION WITH SOCKET.IO */
-    socket.connect().onConnectError((e) { /* WHEN CONNECTION FAILED */
+    socket.onConnectError((e) { /* WHEN CONNECTION FAILED */
       print("onConnectError $e");
-    });
-    try {
-      socket.onConnect((data) { /* WHEN THE CONNECTED SUCCESSFULLY */
-        print('Connected');
-        setState(() {
-          isConnected = true;
-        });
-      });
-      socket.on('message', (data) { /* AFTER CONNECTING, CONSTANTLY LISTEN TO INCOMING MESSAGE */
-        var payload = data['message'];
-        var sender = payload['user']['first_name'] + ' ' + payload['user']['last_name'];
-        var message = payload['message'];
-        int id = payload['receiver_id'];
-        print(payload);
-        if (id == userId) {
-          NotificationApi.showNotification(title: sender, body: message, payload: payload.toString());
-        }
-      });
-    } catch(error) {
       setState(() {
         isConnected = false;
       });
-      print('error $error');
-    }
-    
-  }
-  void _disconnectIO() async { /* DISCONNECT FROM SOCKET.IO */
-    socket.disconnect();
-    setState(() {
-      isConnected = false;
+    });
+    socket.onConnect((data) {
+      print("onConnect $data");
+      setState(() {
+        isConnected = true;
+      });
+    });
+    socket.onDisconnect((data) {
+      print("onDisconnect $data");
+      setState(() {
+        isConnected = false;
+      });
     });
   }
-  void _joinRoom() async { /* JOIN TO MESSAGE-CHANNEL-<PROJECT_ID> CHANNEL */
-    /* 
-    
-    NOTE:
-
-    ONLY PEOPLE INSIDE THE ROOM CAN RECEIVE A PUSH NOTIFICATION
-
-    EXAMPLE:
-    BACKOFFICE ADMIN, AGENT AND CONTRACTOR HAS A NEW PROJECT WITH ID OF 1
-    ALL OF THEM ARE REQUIRED TO JOIN THE CHANNEL MESSAGE-CHANNEL-1
-
-    IF A NEW PROJECT HAS AN ID OF 2
-    JOIN ALSO TO MESSAGE-CHANNEL-2
-
-    ETC.
-
-     */
-    socket.emit('join', 'message');
-    setState(() {
-      roomJoined = true;
-    });
-  }
-  void _leaveRoom() async { /* LEAVE FROM MESSAGE-CHANNEL-<PROJECT_ID> CHANNEL */
-    /* 
-    
-    NOTE:
-
-    ONCE A PERSON LEAVES THIS ROOM, HE/SHE CAN NO LONGER RECEIVE ANY PUSH NOTIFICATIONS
-
-     */
-    socket.emit('leave', 'message');
-    setState(() {
-      roomJoined = false;
-    });
+  Future<void> testEmitSocketIo() async {
+    var notifications = [
+      {
+        "sender_user_id": 2,
+        "reference_id": 6,
+        "type": "new_upcoming_projects",
+        "receiver_user_id": 21,
+        "message": "You have a new project invitation.",
+        "project_date_from": null,
+        "project_date_to": null,
+        "project_status_id": null,
+        "pre_message": "You have a new project invitation.",
+        "post_message": null,
+        "updated_at": "2022-02-09T11:19:12.000000Z",
+        "created_at": "2022-02-09T11:19:12.000000Z",
+        "id": 4,
+        "display_message": [
+          {
+            "message": "You have a new project invitation.",
+            "color": "474747",
+            "weight": 400,
+            "bold": false,
+            "background": "",
+            "badge": false,
+            "date": false
+          },
+          {
+            "message": "00006-20220209-00002",
+            "color": "2040EB",
+            "weight": 800,
+            "bold": true,
+            "background": "",
+            "badge": false,
+            "date": false
+          }
+        ],
+        "sender": {
+          "id": 2,
+          "first_name": "Jim",
+          "last_name": "Levi",
+          "profile_photo_url": "http://127.0.0.1:8000/storage/images/placeholder/placeholder-default.jpg",
+          "location": []
+        }
+      },
+      {
+        "sender_user_id": 2,
+        "reference_id": 6,
+        "type": "new_upcoming_projects",
+        "receiver_user_id": 21,
+        "message": "You have a new project invitation.",
+        "project_date_from": null,
+        "project_date_to": null,
+        "project_status_id": null,
+        "pre_message": "You have a new project invitation.",
+        "post_message": null,
+        "updated_at": "2022-02-09T11:19:12.000000Z",
+        "created_at": "2022-02-09T11:19:12.000000Z",
+        "id": 4,
+        "display_message": [
+          {
+            "message": "You have a new project invitation.",
+            "color": "474747",
+            "weight": 400,
+            "bold": false,
+            "background": "",
+            "badge": false,
+            "date": false
+          },
+          {
+            "message": "00006-20220209-00002",
+            "color": "2040EB",
+            "weight": 800,
+            "bold": true,
+            "background": "",
+            "badge": false,
+            "date": false
+          }
+        ],
+        "sender": {
+          "id": 2,
+          "first_name": "Jim",
+          "last_name": "Levi",
+          "profile_photo_url": "http://127.0.0.1:8000/storage/images/placeholder/placeholder-default.jpg",
+          "location": []
+        }
+      }
+    ];
+    socket.emit('notifications', {'message': notifications});
   }
   @override
   Widget build(BuildContext context) {
@@ -167,8 +203,13 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FlatButton(onPressed: !isConnected ? _connectIO : _disconnectIO , child: !isConnected ? const Text('Connect to Socket.IO') : const Text('Disonnect to Socket.IO')),
-            isConnected ? FlatButton(onPressed: !roomJoined ? _joinRoom : _leaveRoom , child: !roomJoined ? const Text('Join Messages') : const Text('Leave Messages')) : SizedBox.shrink(),
+            !isConnected ? const Text('Not connected') : const Text('Connected'),
+            TextButton(
+              onPressed: testEmitSocketIo,
+              child: const Text(
+                'Test Emit',
+              ),
+            ),
           ],
         ),
       )
