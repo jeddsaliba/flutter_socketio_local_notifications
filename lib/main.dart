@@ -106,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   Future<void> testEmitSocketIo() async {
     var notifications = [
-      {
+      { /* first loop */
         "sender_user_id": 2,
         "reference_id": 6,
         "type": "new_upcoming_projects",
@@ -148,7 +148,49 @@ class _MyHomePageState extends State<MyHomePage> {
           "location": []
         }
       },
-      {
+      { /* second loop */
+        "sender_user_id": 2,
+        "reference_id": 6,
+        "type": "new_upcoming_projects",
+        "receiver_user_id": 21,
+        "message": "You have a new project invitation.",
+        "project_date_from": null,
+        "project_date_to": null,
+        "project_status_id": null,
+        "pre_message": "You have a new project invitation.",
+        "post_message": null,
+        "updated_at": "2022-02-09T11:19:12.000000Z",
+        "created_at": "2022-02-09T11:19:12.000000Z",
+        "id": 4,
+        "display_message": [
+          {
+            "message": "You have a new project invitation.",
+            "color": "474747",
+            "weight": 400,
+            "bold": false,
+            "background": "",
+            "badge": false,
+            "date": false
+          },
+          {
+            "message": "00006-20220209-00002",
+            "color": "2040EB",
+            "weight": 800,
+            "bold": true,
+            "background": "",
+            "badge": false,
+            "date": false
+          }
+        ],
+        "sender": {
+          "id": 2,
+          "first_name": "Jim",
+          "last_name": "Levi",
+          "profile_photo_url": "http://127.0.0.1:8000/storage/images/placeholder/placeholder-default.jpg",
+          "location": []
+        }
+      },
+      { /* third loop */
         "sender_user_id": 2,
         "reference_id": 6,
         "type": "new_upcoming_projects",
